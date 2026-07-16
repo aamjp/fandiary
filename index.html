@@ -508,6 +508,7 @@ input:focus,select:focus,textarea:focus{box-shadow:3px 3px 0 var(--acc);}
       <button class="btn line" onclick="exportData()">💾 備份</button>
       <button class="btn line" onclick="openRestorePaste()">📥 還原</button>
     </div>
+    <div style="margin-top:10px;"><button class="btn sm line wide" onclick="factoryReset()">🔄 恢復出廠預設(清除所有資料)</button></div>
   </div>
   <div class="card">
     <b class="disp" style="font-size:16px;">🔰 其他</b>
@@ -552,41 +553,37 @@ const COUNTRIES=Object.keys(FLAGS);
 const CATS=['門票','交通','住宿','周邊','其他'];
 /* 示範行程庫:日期相對今天動態生成,售票流程仿照真實公告(僅供展示,正式版由雲端行程庫供應) */
 const DEMO_DB=[
- {keys:['SEVENTEEN','세븐틴','珉奎','MINGYU'],label:'SEVENTEEN',events:[
-   {d:6, type:'抽選', name:'CARAT 會員先售資格登錄截止', city:'-', country:'香港', time:'23:59', note:'售票:Weverse 登錄會員資格'},
-   {d:13,type:'開賣', name:'香港場 會員先售', city:'香港', country:'香港', time:'10:00', note:'售票:HK Ticketing(會員先售)'},
-   {d:15,type:'開賣', name:'香港場 一般販售', city:'香港', country:'香港', time:'10:00', note:'售票:HK Ticketing(一般販售)'},
-   {d:45,type:'演出', name:'WORLD TOUR in HONG KONG D1', city:'香港', country:'香港', time:'19:00', note:'啟德主場館'},
-   {d:46,type:'演出', name:'WORLD TOUR in HONG KONG D2', city:'香港', country:'香港', time:'18:00', note:'啟德主場館'},
-   {d:58,type:'開賣', name:'東京巨蛋場 一般販售', city:'東京', country:'日本', time:'12:00', note:'售票:e+(イープラス)'},
-   {d:88,type:'演出', name:'WORLD TOUR in TOKYO', city:'東京', country:'日本', time:'17:00', note:'東京巨蛋'}
+ {keys:['SEVENTEEN','세븐틴','珉奎','MINGYU'],label:'SEVENTEEN(示範資料)',events:[
+   {d:6, type:'抽選', name:'【示範】CARAT 會員先售資格登錄截止', city:'-', country:'香港', time:'23:59', note:'售票:Weverse 登錄會員資格'},
+   {d:13,type:'開賣', name:'【示範】香港場 會員先售', city:'香港', country:'香港', time:'10:00', note:'售票:HK Ticketing(會員先售)'},
+   {d:15,type:'開賣', name:'【示範】香港場 一般販售', city:'香港', country:'香港', time:'10:00', note:'售票:HK Ticketing(一般販售)'},
+   {d:45,type:'演出', name:'【示範】WORLD TOUR in HONG KONG D1', city:'香港', country:'香港', time:'19:00', note:'啟德主場館'},
+   {d:46,type:'演出', name:'【示範】WORLD TOUR in HONG KONG D2', city:'香港', country:'香港', time:'18:00', note:'啟德主場館'},
+   {d:58,type:'開賣', name:'【示範】東京巨蛋場 一般販售', city:'東京', country:'日本', time:'12:00', note:'售票:e+(イープラス)'},
+   {d:88,type:'演出', name:'【示範】WORLD TOUR in TOKYO', city:'東京', country:'日本', time:'17:00', note:'東京巨蛋'}
  ]},
- {keys:['BTS','防彈','바탄','柾國','JUNGKOOK'],label:'BTS',events:[
-   {d:9, type:'抽選', name:'FC 先行抽選申請截止', city:'-', country:'日本', time:'23:59', note:'售票:FC 先行(e+)'},
-   {d:16,type:'入金', name:'先行中票 入金截止', city:'-', country:'日本', time:'21:00', note:'超商代碼/信用卡繳費'},
-   {d:52,type:'開賣', name:'首爾場 一般販售', city:'首爾', country:'韓國', time:'20:00', note:'售票:Interpark Global'},
-   {d:95,type:'演出', name:'SEOUL STADIUM CONCERT', city:'首爾', country:'韓國', time:'18:30', note:'蠶室主競技場'}
+ {keys:['BTS','防彈','바탄','柾國','JUNGKOOK'],label:'BTS(示範資料)',events:[
+   {d:9, type:'抽選', name:'【示範】FC 先行抽選申請截止', city:'-', country:'日本', time:'23:59', note:'售票:FC 先行(e+)'},
+   {d:16,type:'入金', name:'【示範】先行中票 入金截止', city:'-', country:'日本', time:'21:00', note:'超商代碼/信用卡繳費'},
+   {d:52,type:'開賣', name:'【示範】首爾場 一般販售', city:'首爾', country:'韓國', time:'20:00', note:'售票:Interpark Global'},
+   {d:95,type:'演出', name:'【示範】SEOUL STADIUM CONCERT', city:'首爾', country:'韓國', time:'18:30', note:'蠶室主競技場'}
  ]},
- {keys:['TWICE','트와이스'],label:'TWICE',events:[
-   {d:11,type:'開賣', name:'高雄場 全面開賣', city:'高雄', country:'台灣', time:'12:00', note:'售票:拓元 tixCraft'},
-   {d:41,type:'演出', name:'WORLD TOUR in KAOHSIUNG D1', city:'高雄', country:'台灣', time:'18:00', note:'高雄世運主場館'},
-   {d:42,type:'演出', name:'WORLD TOUR in KAOHSIUNG D2', city:'高雄', country:'台灣', time:'17:00', note:'高雄世運主場館'}
+ {keys:['TWICE','트와이스'],label:'TWICE(示範資料)',events:[
+   {d:11,type:'開賣', name:'【示範】高雄場 全面開賣', city:'高雄', country:'台灣', time:'12:00', note:'售票:拓元 tixCraft'},
+   {d:41,type:'演出', name:'【示範】WORLD TOUR in KAOHSIUNG D1', city:'高雄', country:'台灣', time:'18:00', note:'高雄世運主場館'},
+   {d:42,type:'演出', name:'【示範】WORLD TOUR in KAOHSIUNG D2', city:'高雄', country:'台灣', time:'17:00', note:'高雄世運主場館'}
  ]},
- {keys:['2PM','투피엠','HOTTEST','JUNHO','ジュノ','俊昊','TAECYEON','澤演','NICHKHUN','尼坤','WOOYOUNG','祐榮','CHANSUNG','燦盛','JUN.K'],label:'2PM',events:[
-   {d:5, type:'抽選', name:'FC Promise 會員最速先行 申請截止', city:'-', country:'日本', time:'23:59', note:'售票:Hottest Japan FC 先行(抽選制)'},
-   {d:12,type:'抽選', name:'e+ 預購先行(プレオーダー)截止', city:'-', country:'日本', time:'23:59', note:'售票:e+ 抽選制,WEB 限定'},
-   {d:19,type:'入金', name:'先行中票 入金截止', city:'-', country:'日本', time:'21:00', note:'超商代碼/信用卡繳費'},
-   {d:26,type:'開賣', name:'東京巨蛋場 一般販售', city:'東京', country:'日本', time:'10:00', note:'售票:e+(電子票·網路限定,無店頭販售)'},
-   {d:55,type:'演出', name:'Anniversary Concert in TOKYO DOME D1', city:'東京', country:'日本', time:'18:00', note:'東京巨蛋 · 全席指定'},
-   {d:56,type:'演出', name:'Anniversary Concert in TOKYO DOME D2', city:'東京', country:'日本', time:'15:00', note:'東京巨蛋 · 全席指定'},
+ {keys:['2PM','투피엠','HOTTEST','JUNHO','ジュノ','俊昊','TAECYEON','澤演','NICHKHUN','尼坤','WOOYOUNG','祐榮','CHANSUNG','燦盛','JUN.K'],label:'2PM / 俊昊',events:[
+   {date:'2026-01-24',type:'演出', name:'LEE JUNHO FAN MEETING〈STUNNING US〉D1(已落幕)', city:'首爾', country:'韓國', time:'18:00', note:'高麗大學華汀體育館 · 官方公告'},
+   {date:'2026-01-25',type:'演出', name:'LEE JUNHO FAN MEETING〈STUNNING US〉D2(已落幕)', city:'首爾', country:'韓國', time:'17:00', note:'高麗大學華汀體育館 · D2 有 Weverse 直播'},
    {date:'2026-05-09',type:'演出', name:'THE RETURN in TOKYO DOME D1(已落幕)', city:'東京', country:'日本', time:'18:00', note:'日本出道15週年 · 東京巨蛋 · 全席指定 ¥15,500'},
    {date:'2026-05-10',type:'演出', name:'THE RETURN in TOKYO DOME D2(已落幕)', city:'東京', country:'日本', time:'15:00', note:'日本出道15週年 · 東京巨蛋 · 全席指定 ¥15,500'},
    {date:'2026-09-12',type:'演出', name:'LEE JUNHO FANMEETING〈AUTUMN NOTE〉in Seoul', city:'首爾', country:'韓國', time:'19:30', note:'官方FC已公告 · 以官方公告為準'}
  ]},
- {keys:['AESPA','에스파'],label:'aespa',events:[
-   {d:7, type:'抽選', name:'官咖會員先售登記截止', city:'-', country:'台灣', time:'23:59', note:'售票:KKTIX 會員先售'},
-   {d:14,type:'開賣', name:'台北場 一般販售', city:'台北', country:'台灣', time:'11:00', note:'售票:KKTIX'},
-   {d:38,type:'演出', name:'LIVE TOUR in TAIPEI', city:'台北', country:'台灣', time:'19:00', note:'台北小巨蛋'}
+ {keys:['AESPA','에스파'],label:'aespa(示範資料)',events:[
+   {d:7, type:'抽選', name:'【示範】官咖會員先售登記截止', city:'-', country:'台灣', time:'23:59', note:'售票:KKTIX 會員先售'},
+   {d:14,type:'開賣', name:'【示範】台北場 一般販售', city:'台北', country:'台灣', time:'11:00', note:'售票:KKTIX'},
+   {d:38,type:'演出', name:'【示範】LIVE TOUR in TAIPEI', city:'台北', country:'台灣', time:'19:00', note:'台北小巨蛋'}
  ]}
 ];
 function matchDemo(name,group){
@@ -629,7 +626,8 @@ function uiChoice(msg,opts){
   });
 }
 async function uiConfirm(msg,ok,cancel){ const r=await uiChoice(msg,[{label:ok||'確定',value:true,primary:true},{label:cancel||'取消',value:false}]); return !!r; }
-const todayStr=()=>new Date().toISOString().slice(0,10);
+const localYMD=t=>`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+const todayStr=()=>localYMD(new Date());
 
 function seed(){
   const a1=uid();
@@ -640,7 +638,7 @@ function seed(){
     activeArtistId:a1,
     events:[
       {id:uid(),artistId:a1,name:'LEE JUNHO FANMEETING〈AUTUMN NOTE〉in Seoul',type:'演出',date:'2026-09-12',time:'19:30',city:'首爾',country:'韓國',venue:'首爾(場館待公告)',note:'官方FC已公告 · 以官方公告為準',join:'want',unit:'SOLO'},
-      {id:uid(),artistId:a1,name:'AUTUMN NOTE 旅行團申込(入金先著順)',type:'開賣',date:offset(7),time:'12:00',city:'-',country:'韓國',note:'KJC TOUR 受理 · 申込後24小時內入金 · 以官方公告為準',unit:'SOLO'}
+      {id:uid(),artistId:a1,name:'(自訂提醒)AUTUMN NOTE 旅行團申込-先著順額滿即止',type:'開賣',date:offset(7),time:'12:00',city:'-',country:'韓國',note:'官方無公告截止日,此日期為自訂提醒 · KJC TOUR 申込後24小時內入金',unit:'SOLO'}
     ],
     memories:[
       {id:uid(),artistId:a1,title:'Arena Tour 2023「また会える日」神戶場',date:'2023-08-05',venue:'神戶世界紀念廳',city:'神戶',country:'日本',rating:5,note:'入坑後第一場參戰!Solo 出道十週年巡演,從此回不去了。',photo:null},
@@ -678,7 +676,7 @@ function seed(){
     ui:{theme:'light'}
   };
 }
-function offset(d){const t=new Date(); t.setDate(t.getDate()+d); return t.toISOString().slice(0,10);}
+function offset(d){const t=new Date(); t.setDate(t.getDate()+d); return localYMD(t);}
 /* ---- IndexedDB 照片庫 ---- */
 let idb=null; const PHOTO_CACHE=new Map();
 function idbOpen(){ return new Promise(res=>{ try{
@@ -1500,6 +1498,18 @@ function renderSettings(){
 }
 function setHomeCountry(v){ S.ui=S.ui||{}; S.ui.homeCountry=v; save(); toast('所在國家已更新','🏠'); }
 function setBaseCurrency(v){ S.ui=S.ui||{}; S.ui.baseCur=v; save(); toast('統計幣別:'+CUR_SIGN[v]+' '+v,'💱'); }
+
+async function factoryReset(){
+  const ok=await uiChoice('⚠️ 恢復出廠預設?<br><span style="font-size:12.5px; font-weight:500;">目前所有紀錄與照片將被清除,換回全新的預設資料(俊昊/2PM)。建議先「💾 備份」。</span>',[
+    {label:'🗑 清除並恢復預設',value:'go'},
+    {label:'取消',value:null,primary:true}
+  ]);
+  if(ok!=='go')return;
+  try{ localStorage.removeItem(LS); }catch(e){}
+  try{ if(idb){ idb.transaction('photos','readwrite').objectStore('photos').clear(); } }catch(e){}
+  PHOTO_CACHE.clear();
+  S=null; load(); applyTheme(); go('home'); toast('已恢復出廠預設','🔄');
+}
 
 /* ================= 備份 / 還原 ================= */
 async function exportData(){
