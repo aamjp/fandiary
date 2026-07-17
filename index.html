@@ -511,6 +511,7 @@ input:focus,select:focus,textarea:focus{box-shadow:3px 3px 0 var(--acc);}
       <button class="btn line" onclick="exportData()">💾 備份</button>
       <button class="btn line" onclick="openRestorePaste()">📥 還原</button>
     </div>
+    <div style="margin-top:10px;"><button class="btn sm wide" onclick="clearDemoData()">🧹 一鍵清除示範資料(保留自己的紀錄)</button></div>
     <div style="margin-top:10px;"><button class="btn sm line wide" onclick="factoryReset()">🔄 恢復出廠預設(清除所有資料)</button></div>
   </div>
   <div class="card">
@@ -636,45 +637,45 @@ function seed(){
   const a1=uid();
   return {
     artists:[
-      {id:a1,name:'俊昊',group:'2PM',color:'#F5A9C4',role:'main',since:'2023-08-01'}
+      {id:a1,name:'俊昊',group:'2PM',color:'#F5A9C4',role:'main',since:'2023-08-01',demo:true}
     ],
     activeArtistId:a1,
     events:[
-      {id:uid(),artistId:a1,name:'LEE JUNHO FANMEETING〈AUTUMN NOTE〉in Seoul',type:'演出',date:'2026-09-12',time:'19:30',city:'首爾',country:'韓國',venue:'首爾(場館待公告)',note:'官方FC已公告 · 以官方公告為準',join:'want',unit:'SOLO'},
-      {id:uid(),artistId:a1,name:'(自訂提醒)AUTUMN NOTE 旅行團申込-先著順額滿即止',type:'開賣',date:offset(7),time:'12:00',city:'-',country:'韓國',note:'官方無公告截止日,此日期為自訂提醒 · KJC TOUR 申込後24小時內入金',unit:'SOLO'}
+      {demo:true,id:uid(),artistId:a1,name:'LEE JUNHO FANMEETING〈AUTUMN NOTE〉in Seoul',type:'演出',date:'2026-09-12',time:'19:30',city:'首爾',country:'韓國',venue:'首爾(場館待公告)',note:'官方FC已公告 · 以官方公告為準',join:'want',unit:'SOLO'},
+      {demo:true,id:uid(),artistId:a1,name:'(自訂提醒)AUTUMN NOTE 旅行團申込-先著順額滿即止',type:'開賣',date:offset(7),time:'12:00',city:'-',country:'韓國',note:'官方無公告截止日,此日期為自訂提醒 · KJC TOUR 申込後24小時內入金',unit:'SOLO'}
     ],
     memories:[
-      {id:uid(),artistId:a1,title:'Arena Tour 2023「また会える日」神戶場',date:'2023-08-05',venue:'神戶世界紀念廳',city:'神戶',country:'日本',rating:5,note:'入坑後第一場參戰!Solo 出道十週年巡演,從此回不去了。',photo:null},
-      {id:uid(),artistId:a1,title:'Arena Tour 2023「また会える日」名古屋最終場',date:'2023-08-27',venue:'日本瓦斯廳(日本ガイシホール)',city:'名古屋',country:'日本',rating:5,note:'巡演千秋樂!全國電影院同步 LV 的那場,現場見證。',photo:null},
-      {id:uid(),artistId:a1,title:'樂天免稅店 All-Night Party FM',date:'2023-10-21',venue:'樂天世界 Adventure',city:'首爾',country:'韓國',rating:4,note:'遊樂園包場+兩首 Live+脫口秀,初次海外遠征首爾。',photo:null},
-      {id:uid(),artistId:a1,title:'LOTTE DUTY FREE FAN EVENT',date:'2024-05-25',venue:'首爾(免稅店活動)',city:'首爾',country:'韓國',rating:4,note:'迷你演唱會兩首+全員擊掌+團體合照,值回票價。',photo:null},
-      {id:uid(),artistId:a1,title:'FAN-CON〈Midnight Sun〉仁川場 D1',date:'2025-01-25',venue:'INSPIRE Arena',city:'仁川',country:'韓國',rating:5,note:'巡演首站!寒冬裡的 Midnight Sun,燒到不行。',photo:null},
-      {id:uid(),artistId:a1,title:'FAN-CON〈Midnight Sun〉in JAPAN D1',date:'2025-02-08',venue:'東京體育館',city:'東京',country:'日本',rating:5,note:'相隔一年五個月的日本公演,兩萬人大合唱。',photo:null},
-      {id:uid(),artistId:a1,title:'「Typhoon Family」Drama FM in TOKYO',date:'2025-12-14',venue:'KEIO ARENA TOKYO',city:'東京',country:'日本',rating:4,note:'颱風商社播出紀念 FM,一日兩場,演員模式的他也好帥。',photo:null},
-      {id:uid(),artistId:a1,title:'LEE JUNHO FAN MEETING〈STUNNING US〉D2',date:'2026-01-25',venue:'高麗大學華汀體育館',city:'首爾',country:'韓國',rating:5,note:'生日 FM!飛首爾值得,安可尖叫到失聲。',photo:null},
-      {id:uid(),artistId:a1,title:'2PM 15th Anniversary「THE RETURN」in TOKYO DOME D2',date:'2026-05-10',venue:'東京巨蛋',city:'東京',country:'日本',rating:5,note:'六人完全體+日本出道15週年,哭爛。全席指定運氣超好。',photo:null}
+      {demo:true,id:uid(),artistId:a1,title:'Arena Tour 2023「また会える日」神戶場',date:'2023-08-05',venue:'神戶世界紀念廳',city:'神戶',country:'日本',rating:5,note:'入坑後第一場參戰!Solo 出道十週年巡演,從此回不去了。',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'Arena Tour 2023「また会える日」名古屋最終場',date:'2023-08-27',venue:'日本瓦斯廳(日本ガイシホール)',city:'名古屋',country:'日本',rating:5,note:'巡演千秋樂!全國電影院同步 LV 的那場,現場見證。',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'樂天免稅店 All-Night Party FM',date:'2023-10-21',venue:'樂天世界 Adventure',city:'首爾',country:'韓國',rating:4,note:'遊樂園包場+兩首 Live+脫口秀,初次海外遠征首爾。',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'LOTTE DUTY FREE FAN EVENT',date:'2024-05-25',venue:'首爾(免稅店活動)',city:'首爾',country:'韓國',rating:4,note:'迷你演唱會兩首+全員擊掌+團體合照,值回票價。',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'FAN-CON〈Midnight Sun〉仁川場 D1',date:'2025-01-25',venue:'INSPIRE Arena',city:'仁川',country:'韓國',rating:5,note:'巡演首站!寒冬裡的 Midnight Sun,燒到不行。',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'FAN-CON〈Midnight Sun〉in JAPAN D1',date:'2025-02-08',venue:'東京體育館',city:'東京',country:'日本',rating:5,note:'相隔一年五個月的日本公演,兩萬人大合唱。',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'「Typhoon Family」Drama FM in TOKYO',date:'2025-12-14',venue:'KEIO ARENA TOKYO',city:'東京',country:'日本',rating:4,note:'颱風商社播出紀念 FM,一日兩場,演員模式的他也好帥。',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'LEE JUNHO FAN MEETING〈STUNNING US〉D2',date:'2026-01-25',venue:'高麗大學華汀體育館',city:'首爾',country:'韓國',rating:5,note:'生日 FM!飛首爾值得,安可尖叫到失聲。',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'2PM 15th Anniversary「THE RETURN」in TOKYO DOME D2',date:'2026-05-10',venue:'東京巨蛋',city:'東京',country:'日本',rating:5,note:'六人完全體+日本出道15週年,哭爛。全席指定運氣超好。',photo:null}
     ],
     cards:[
-      {id:uid(),artistId:a1,title:'STUNNING US 場販限定小卡',category:'FM 小卡',status:'keep',photo:null},
-      {id:uid(),artistId:a1,title:'THE RETURN 東京巨蛋 特典卡',category:'Concert 小卡',status:'give',photo:null}
+      {demo:true,id:uid(),artistId:a1,title:'STUNNING US 場販限定小卡',category:'FM 小卡',status:'keep',photo:null},
+      {demo:true,id:uid(),artistId:a1,title:'THE RETURN 東京巨蛋 特典卡',category:'Concert 小卡',status:'give',photo:null}
     ],
     expenses:[
-      {id:uid(),artistId:a1,cat:'門票',amount:4300,date:'2023-07-01',note:'Arena Tour 2023 神戶+名古屋'},
-      {id:uid(),artistId:a1,cat:'交通',amount:6800,date:'2025-02-01',note:'東京來回(Midnight Sun)'},
-      {id:uid(),artistId:a1,cat:'門票',amount:8200,date:'2026-01-10',note:'STUNNING US D2'},
-      {id:uid(),artistId:a1,cat:'交通',amount:7600,date:'2026-01-20',note:'首爾來回機票'},
-      {id:uid(),artistId:a1,cat:'周邊',amount:3100,date:'2026-05-10',note:'THE RETURN 場販+手燈'}
+      {demo:true,id:uid(),artistId:a1,cat:'門票',amount:4300,date:'2023-07-01',note:'Arena Tour 2023 神戶+名古屋'},
+      {demo:true,id:uid(),artistId:a1,cat:'交通',amount:6800,date:'2025-02-01',note:'東京來回(Midnight Sun)'},
+      {demo:true,id:uid(),artistId:a1,cat:'門票',amount:8200,date:'2026-01-10',note:'STUNNING US D2'},
+      {demo:true,id:uid(),artistId:a1,cat:'交通',amount:7600,date:'2026-01-20',note:'首爾來回機票'},
+      {demo:true,id:uid(),artistId:a1,cat:'周邊',amount:3100,date:'2026-05-10',note:'THE RETURN 場販+手燈'}
     ],
     teammates:[
-      {id:uid(),name:'小魚',platform:'拓元',duty:'主搶 A 區'}
+      {demo:true,id:uid(),name:'小魚',platform:'拓元',duty:'主搶 A 區'}
     ],
     cheat:[
-      {label:'會員帳號',value:'demo_fan_001'},
-      {label:'場次代碼',value:'JUNHO-SEL-0912'},
-      {label:'目標票區',value:'A2 > B1 > 看台 2F'}
+      {demo:true,label:'會員帳號',value:'demo_fan_001'},
+      {demo:true,label:'場次代碼',value:'JUNHO-SEL-0912'},
+      {demo:true,label:'目標票區',value:'A2 > B1 > 看台 2F'}
     ],
     results:[
-      {id:uid(),event:'STUNNING US D2',platform:'Interpark',win:true,seat:'2F B 區'}
+      {demo:true,id:uid(),event:'STUNNING US D2',platform:'Interpark',win:true,seat:'2F B 區'}
     ],
     ui:{theme:'light'}
   };
@@ -728,6 +729,64 @@ function migrate(){
   S.memories.forEach(m=>{ if(!m.fit)m.fit='cover'; });
   S.expenses.forEach(e=>{ if(!e.cur)e.cur='TWD'; });
   if(!S.ui)S.ui={};
+  tagLegacyDemo();
+}
+/* 舊資料補打示範標記(只跑一次):讓更新前就在用的人也能一鍵清除示範資料 */
+function tagLegacyDemo(){
+  if(S.ui.demoTagged) return;
+  const K=new Set([
+    'LEE JUNHO FANMEETING〈AUTUMN NOTE〉in Seoul','(自訂提醒)AUTUMN NOTE 旅行團申込-先著順額滿即止',
+    'Arena Tour 2023「また会える日」神戶場','Arena Tour 2023「また会える日」名古屋最終場',
+    '樂天免稅店 All-Night Party FM','LOTTE DUTY FREE FAN EVENT',
+    'FAN-CON〈Midnight Sun〉仁川場 D1','FAN-CON〈Midnight Sun〉in JAPAN D1',
+    '「Typhoon Family」Drama FM in TOKYO','LEE JUNHO FAN MEETING〈STUNNING US〉D2',
+    '2PM 15th Anniversary「THE RETURN」in TOKYO DOME D2',
+    'STUNNING US 場販限定小卡','THE RETURN 東京巨蛋 特典卡',
+    'Arena Tour 2023 神戶+名古屋','東京來回(Midnight Sun)','STUNNING US D2','首爾來回機票','THE RETURN 場販+手燈',
+    'demo_fan_001','JUNHO-SEL-0912','A2 > B1 > 看台 2F'
+  ]);
+  S.events.forEach(e=>{ if(K.has(e.name)||(e.name||'').includes('【示範】')) e.demo=true; });
+  S.memories.forEach(m=>{ if(K.has(m.title)) m.demo=true; });
+  S.cards.forEach(c=>{ if(K.has(c.title)) c.demo=true; });
+  S.expenses.forEach(x=>{ if(K.has(x.note)) x.demo=true; });
+  S.teammates.forEach(t=>{ if(t.name==='小魚'&&t.platform==='拓元') t.demo=true; });
+  S.cheat.forEach(c=>{ if(K.has(c.value)) c.demo=true; });
+  S.results.forEach(r=>{ if(r.event==='STUNNING US D2'&&r.platform==='Interpark') r.demo=true; });
+  S.artists.forEach(a=>{ if(a.name==='俊昊'&&a.group==='2PM') a.demo=true; });
+  S.ui.demoTagged=true;
+}
+/* 一鍵清除示範資料:只刪預設紀錄,使用者自己新增的全部保留 */
+async function clearDemoData(){
+  const lists=['events','memories','cards','expenses','teammates','results'];
+  const isDemo=(k,v)=>!!v.demo||(k==='events'&&(v.name||'').includes('【示範】'));
+  let cnt=lists.reduce((t,k)=>t+S[k].filter(v=>isDemo(k,v)).length,0)+(S.cheat||[]).filter(c=>c.demo).length;
+  if(!cnt&&!S.artists.some(a=>a.demo)) return toast('沒有示範資料了,現在都是你的紀錄','✅');
+  const ok=await uiChoice(`🧹 清除示範資料?<br><span style="font-size:12.5px; font-weight:500;">將刪除 <b>${cnt}</b> 筆預設示範紀錄(【示範】行程、俊昊的參戰回憶等)。<b>你自己新增的紀錄會完整保留</b>,此操作無法復原。</span>`,[
+    {label:'🧹 清除示範資料',value:'go'},
+    {label:'取消',value:null,primary:true}
+  ]);
+  if(ok!=='go')return;
+  lists.forEach(k=>{
+    S[k].forEach(v=>{ if(isDemo(k,v)&&v.photo)dropPhoto(v.photo); });
+    S[k]=S[k].filter(v=>!isDemo(k,v));
+  });
+  S.cheat=(S.cheat||[]).filter(c=>!c.demo);
+  const others=S.artists.filter(a=>!a.demo);
+  if(others.length){
+    /* 已有自己的自擔 → 連示範自擔一起移除(含其殘留紀錄) */
+    const ids=new Set(S.artists.filter(a=>a.demo).map(a=>a.id));
+    ['events','memories','cards','expenses'].forEach(k=>{ S[k]=S[k].filter(v=>!ids.has(v.artistId)); });
+    S.artists=others;
+    if(!others.some(a=>a.role==='main')) others[0].role='main';
+    if(!artist(S.activeArtistId)) S.activeArtistId=others[0].id;
+    save(); applyTheme(); go('home');
+    toast('示範資料已清除,只剩你自己的紀錄!','🧹');
+  }else{
+    /* 只有示範自擔 → 保留一位當空殼,提示改成自己的本命 */
+    S.artists.forEach(a=>delete a.demo);
+    save(); go('home');
+    toast('示範紀錄已清除!點「+ 自擔」把他換成你的本命吧','💖');
+  }
 }
 function load(){ try{S=JSON.parse(localStorage.getItem(LS))}catch(e){} if(!S||!S.artists) S=seed(); migrate(); save(); }
 function save(){ try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){ toast('儲存空間已滿','⚠️'); } }
