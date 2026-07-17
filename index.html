@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>FanDiary 應援日誌</title>
+<!-- ===== PWA ===== -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#FFF6E9">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<!-- iOS 加到主畫面 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="FanDiary">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -544,6 +554,7 @@ input:focus,select:focus,textarea:focus{box-shadow:3px 3px 0 var(--acc);}
       <button class="btn line" onclick="exportData()">💾 備份</button>
       <button class="btn line" onclick="openRestorePaste()">📥 還原</button>
     </div>
+    <div style="margin-top:10px;"><button class="btn sm wide" id="pwaInstallBtn" onclick="pwaInstall()">📲 安裝到主畫面</button></div>
     <div style="margin-top:10px;"><button class="btn sm wide" onclick="clearDemoData()">🧹 一鍵清除示範資料(保留自己的紀錄)</button></div>
     <div style="margin-top:10px;"><button class="btn sm line wide" onclick="factoryReset()">🔄 恢復出廠預設(清除所有資料)</button></div>
   </div>
@@ -2078,6 +2089,52 @@ function copyMeal(btn){
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(ok).catch(fb);
   else fb();
 }
+
+/* ================= PWA:安裝與離線 ================= */
+let PWA_PROMPT=null;
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{/* file:// 或不支援時安靜略過 */});
+  });
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); PWA_PROMPT=e;
+  const b=document.getElementById('pwaInstallBtn'); if(b)b.textContent='📲 安裝到主畫面(可直接安裝!)';
+});
+function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true; }
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+async function pwaInstall(){
+  if(isStandalone()) return toast('已經是主畫面 App 了!','📲');
+  if(PWA_PROMPT){ /* Android/Chrome:直接跳原生安裝視窗 */
+    PWA_PROMPT.prompt();
+    const r=await PWA_PROMPT.userChoice; PWA_PROMPT=null;
+    if(r&&r.outcome==='accepted')toast('安裝完成!到主畫面找 FanDiary','🎉');
+    return;
+  }
+  /* iOS 或尚未符合安裝條件:圖解教學 */
+  showSheet(`
+    <h2 class="disp" style="margin:0 0 4px;">📲 加到主畫面</h2>
+    ${isIOS()?`
+    <p class="sub" style="margin:6px 0;">iPhone / iPad(要用 <b>Safari</b> 開啟):</p>
+    <div class="card" style="margin:8px 0;"><b>1.</b> 點下方工具列的 <b>分享按鈕 ⬆️</b>(方框加箭頭)</div>
+    <div class="card" style="margin:8px 0;"><b>2.</b> 往下捲,點 <b>「加入主畫面」➕</b></div>
+    <div class="card" style="margin:8px 0;"><b>3.</b> 右上角按 <b>「加入」</b>,完成!主畫面就會出現 💖 圖示</div>
+    `:`
+    <p class="sub" style="margin:6px 0;">Android(建議用 <b>Chrome</b> 開啟):</p>
+    <div class="card" style="margin:8px 0;"><b>1.</b> 點右上角 <b>⋮</b> 選單</div>
+    <div class="card" style="margin:8px 0;"><b>2.</b> 點 <b>「加到主畫面」</b>或<b>「安裝應用程式」</b></div>
+    <div class="card" style="margin:8px 0;"><b>3.</b> 確認後主畫面就會出現 💖 圖示</div>
+    `}
+    <p class="sub" style="margin:8px 0 0; font-size:12px;">⚠️ 需要用 https 網址開啟才能安裝;安裝後資料存在手機裡,記得定期到設定「備份」。</p>
+    <div style="margin-top:12px;"><button class="btn wide" onclick="closeSheet()">知道了</button></div>`);
+}
+/* 首次到訪的溫柔提示(只提示一次,已安裝不提示) */
+setTimeout(()=>{
+  if(!isStandalone()&&!S.ui.pwaHinted&&location.protocol.startsWith('http')){
+    S.ui.pwaHinted=true; save();
+    toast('可以把 FanDiary 加到主畫面喔!在設定 → 📲','💡');
+  }
+},4500);
 
 /* ================= 個人設定 ================= */
 function openSettings(){ go('settings'); }
