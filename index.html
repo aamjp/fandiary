@@ -163,14 +163,14 @@ h1.pgtitle{font-size:27px; margin:0; letter-spacing:1px;}
 .mate .av{width:38px; height:38px; border-radius:50%; border:2.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; flex:0 0 auto; font-family:'Baloo 2',sans-serif;}
 
 /* ---- photocards ---- */
-.pcgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-top:14px;}
+.pcgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:14px;}
 .pc{
-  aspect-ratio:5.5/8.5; border:2.5px solid var(--ink); border-radius:14px;
-  box-shadow:4px 4px 0 var(--ink); overflow:hidden; position:relative;
+  aspect-ratio:5.5/8.5; border:2px solid var(--ink); border-radius:11px;
+  box-shadow:2.5px 2.5px 0 var(--ink); overflow:hidden; position:relative;
   background:var(--acc-soft); cursor:pointer;
 }
 .pc img{width:100%; height:100%; object-fit:cover; display:block;}
-.pc .ph{width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:44px;}
+.pc .ph{width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:34px;}
 .pc .rar{position:absolute; top:7px; left:7px;}
 .pc .nm{
   position:absolute; bottom:0; left:0; right:0; padding:5px 9px;
@@ -221,7 +221,7 @@ h1.pgtitle{font-size:27px; margin:0; letter-spacing:1px;}
 #veil.on{display:block;}
 #sheet{
   position:fixed; left:50%; bottom:0; transform:translateX(-50%) translateY(105%);
-  width:min(430px,100%); max-height:86vh; overflow-y:auto; z-index:50;
+  width:min(430px,100%); max-height:86vh; max-height:86dvh; overflow-y:auto; z-index:50; overscroll-behavior:contain;
   background:var(--paper); border:3px solid var(--ink); border-bottom:none;
   border-radius:22px 22px 0 0; padding:18px 18px 26px;
   transition:transform .25s ease;
@@ -257,7 +257,7 @@ input:focus,select:focus,textarea:focus{box-shadow:3px 3px 0 var(--acc);}
 }
 .share-canvas-wrap{text-align:center;}
 #shareImg{width:100%; max-width:330px; border:2.5px solid var(--ink); border-radius:16px; box-shadow:4px 4px 0 var(--ink);}
-.pcedit{position:absolute; top:6px; right:6px; z-index:2; background:var(--white); border:2px solid var(--ink); border-radius:9px; font-size:12px; padding:1px 6px; box-shadow:2px 2px 0 var(--ink); cursor:pointer;}
+.pcedit{position:absolute; top:4px; right:4px; z-index:2; background:var(--white); border:1.5px solid var(--ink); border-radius:8px; font-size:11px; padding:0 5px; box-shadow:1.5px 1.5px 0 var(--ink); cursor:pointer;}
 .seg .pill{cursor:pointer; opacity:.5;}
 .seg .pill.onf{opacity:1; outline:2.5px solid var(--ink); outline-offset:1px;}
 .dday{font-family:'Baloo 2',sans-serif; font-weight:800; color:var(--acc-deep); min-width:46px; text-align:center; font-size:13px; flex:0 0 auto;}
@@ -368,7 +368,10 @@ input:focus,select:focus,textarea:focus{box-shadow:3px 3px 0 var(--acc);}
 <section class="page" id="pg-mem">
   <div class="hgroup">
     <h1 class="pgtitle disp">回憶時間軸</h1>
-    <button class="btn sm" onclick="openMemSheet()">+ 參戰紀錄</button>
+    <div>
+      <button class="btn sm line" onclick="yearFromMem()">📤 年度回顧</button>
+      <button class="btn sm" onclick="openMemSheet()">+ 參戰紀錄</button>
+    </div>
   </div>
   <p class="sub" style="margin:2px 2px 0;">每一場都值得被記住 ✍️</p>
   <div class="oshi-row" id="memFilter" style="margin-top:8px;"></div>
@@ -474,7 +477,7 @@ input:focus,select:focus,textarea:focus{box-shadow:3px 3px 0 var(--acc);}
   <div class="share-canvas-wrap card">
     <canvas id="shareCanvas" width="900" height="1200" style="display:none;"></canvas>
     <img id="shareImg" alt="戰績分享卡預覽">
-    <div style="margin-top:12px;"><a id="shareDl" class="btn wide" download="fandiary-share.png">下載分享卡 ⬇</a></div>
+    <div style="margin-top:12px;"><button id="shareDl" class="btn wide" onclick="dlDataUrl(window._mainCardUrl,'fandiary-share.png')">下載分享卡 ⬇</button></div>
   </div>
   <div class="card tilt-r">
     <div class="tape t2"></div>
@@ -503,7 +506,7 @@ input:focus,select:focus,textarea:focus{box-shadow:3px 3px 0 var(--acc);}
   <div class="card tilt-r">
     <div class="tape t2"></div>
     <b class="disp" style="font-size:16px;">💾 資料</b>
-    <p class="sub" style="margin:6px 0;">資料只存在這台裝置,清瀏覽器資料或換機前先備份;備份檔含照片。</p>
+    <p class="sub" style="margin:6px 0;">🔒 所有資料<b>只存在這台裝置</b>,不上傳雲端、開發者也看不到。清瀏覽器資料或換機前先備份;備份檔含照片。</p>
     <div class="row">
       <button class="btn line" onclick="exportData()">💾 備份</button>
       <button class="btn line" onclick="openRestorePaste()">📥 還原</button>
@@ -549,7 +552,7 @@ const LS='fandiary_v2';
 const TYPE_COLOR={'演出':'var(--acc)','抽選':'var(--sky)','入金':'var(--sun)','開賣':'var(--tan)','其他':'var(--mint)'};
 const TYPE_PILL={'演出':'acc','抽選':'sky','入金':'sun','開賣':'tan','其他':'mint'};
 const FLAGS={'台灣':'🇹🇼','日本':'🇯🇵','韓國':'🇰🇷','香港':'🇭🇰','澳門':'🇲🇴','泰國':'🇹🇭','新加坡':'🇸🇬','馬來西亞':'🇲🇾','菲律賓':'🇵🇭','印尼':'🇮🇩','中國':'🇨🇳','美國':'🇺🇸','英國':'🇬🇧','法國':'🇫🇷','德國':'🇩🇪','澳洲':'🇦🇺'};
-const COUNTRIES=Object.keys(FLAGS);
+const COUNTRIES=['台灣','日本','韓國','香港','澳門','泰國','新加坡','馬來西亞','菲律賓','印尼'];
 const CATS=['門票','交通','住宿','周邊','其他'];
 /* 示範行程庫:日期相對今天動態生成,售票流程仿照真實公告(僅供展示,正式版由雲端行程庫供應) */
 const DEMO_DB=[
@@ -859,7 +862,7 @@ function renderDay(){
       <button class="btn sm line" onclick="delEvent('${e.id}')">🗑</button>
     </div>`).join(''):'<div class="empty">這天沒有行程,「+ 這天」補一筆?</div>';
 }
-async function delEvent(id){ if(await uiConfirm('刪除這筆行程?','刪除','留著')){ S.events=S.events.filter(e=>e.id!==id); save(); renderCal(); toast('已刪除'); } }
+async function delEvent(id){ if(await uiConfirm('刪除這筆行程?','刪除','留著')){ const ev=S.events.find(e=>e.id===id); if(ev)dropPhoto(ev.photo); S.events=S.events.filter(e=>e.id!==id); save(); renderCal(); toast('已刪除'); } }
 
 /* ---- 聰明貼上 ---- */
 let pRows=[];
@@ -904,21 +907,28 @@ function parsePaste(){
     for(const c in CITY_HINT){ if(U.includes(c.toUpperCase())){ city=c; country=CITY_HINT[c]; break; } }
     return {venue:vm?vm[1].trim():'', city, country};
   };
-  const lines=txt.split(/[\n\/]+/).map(l=>l.trim()).filter(Boolean);
+  const lines=txt.split(/\n+|\s\/\s?/).map(l=>l.trim()).filter(Boolean);
   const yNow=new Date().getFullYear();
   pRows=[];
   lines.forEach(line=>{
     let y,mo,dd;
-    let m=line.match(/(20\d{2})[年.\-]\s?(\d{1,2})[月.\-]\s?(\d{1,2})/);
+    let m=line.match(/(20\d{2})[年.\-\/]\s?(\d{1,2})[月.\-\/]\s?(\d{1,2})/);
     if(m){ y=+m[1]; mo=+m[2]; dd=+m[3]; }
-    else{ m=line.match(/(\d{1,2})月\s?(\d{1,2})日/); if(m){ y=yNow; mo=+m[1]; dd=+m[2]; } }
+    else{ m=line.match(/(\d{1,2})[月\/]\s?(\d{1,2})日?/); if(m){ y=yNow; mo=+m[1]; dd=+m[2]; } }
     if(!m) return;
-    const tm2=line.match(/(\d{1,2}):(\d{2})/);
+    /* 同一行的第二天(連日公演):8月26日・27日 / 5/9・5/10 */
+    const rest=line.slice(m.index+m[0].length);
+    const ex=rest.match(/[・、,]\s?(?:(\d{1,2})[月\/]\s?)?(\d{1,2})日?/);
+    const extraDay=ex?{mo:ex[1]?+ex[1]:mo,dd:+ex[2]}:null;
+    let tm2=line.match(/(\d{1,2}):(\d{2})/);
+    if(!tm2){ const th=line.match(/(\d{1,2})時(半)?/); if(th) tm2=[0,th[1],th[2]?'30':'00']; }
     const type=guessType(line);
-    pRows.push({date:`${y}-${String(mo).padStart(2,'0')}-${String(dd).padStart(2,'0')}`,
+    const mkRow=(yy,mm,dd2,suffix)=>({date:`${yy}-${String(mm).padStart(2,'0')}-${String(dd2).padStart(2,'0')}`,
       time:tm2?`${String(+tm2[1]).padStart(2,'0')}:${tm2[2]}`:'',
       type, raw:line, ...pickPlace(line),
-      name:title?`${title} ${SUF[type]||''}`.trim():line.slice(0,42)});
+      name:(title?`${title} ${SUF[type]||''}`.trim():line.slice(0,42))+(suffix||'')});
+    pRows.push(mkRow(y,mo,dd,extraDay?' D1':''));
+    if(extraDay&&extraDay.dd>=1&&extraDay.dd<=31) pRows.push(mkRow(y,extraDay.mo,extraDay.dd,' D2'));
   });
   const out=document.getElementById('pOut');
   out.innerHTML=pRows.length?`
@@ -1141,7 +1151,7 @@ function renderPC(){
   g.innerHTML=cs.map((c,i)=>`
     <div class="pc ${i%2?'tilt-r':'tilt-l'}" onclick="openHolo('${c.id}')">
       ${photoSrc(c.photo)?`<img src="${photoSrc(c.photo)}" alt="">`:`<div class="ph">💿</div>`}
-      <span class="pill sun rar" style="font-size:10px;">${esc(c.category||'其他')}</span>
+      <span class="pill sun rar" style="font-size:8.5px; padding:1px 7px; border-width:1.5px;">${esc(c.category||'其他')}</span>
       ${c.status&&c.status!=='keep'?`<span class="pill ${c.status==='give'?'tan':'sky'}" style="position:absolute; top:42px; left:7px; font-size:10px;">${CARD_ST[c.status]}</span>`:''}
       <button class="pcedit" onclick="event.stopPropagation();openCardSheet('${c.id}')">✏️</button>
       <button class="pcedit" style="top:40px;" onclick="event.stopPropagation();shareCardImg('${c.id}')">📤</button>
@@ -1244,6 +1254,7 @@ function delExp(id){ S.expenses=S.expenses.filter(e=>e.id!==id); save(); renderM
 
 /* ================= share card ================= */
 let shareScope='';
+function yearFromMem(){ shareScope=(memFilter!=='all'&&artist(memFilter))?memFilter:'all'; shareYearCard(); }
 function setShareScope(id){ shareScope=id; renderShare(); }
 function renderShare(){
   if(shareScope!=='all'&&!artist(shareScope)) shareScope=S.activeArtistId;
@@ -1286,12 +1297,25 @@ function renderShare(){
   x.font="500 24px 'Noto Sans TC',sans-serif"; x.fillText(last?`${last.date} · ${last.city} ${last.country}`:'',450,1055);
   x.fillStyle='#221D2B'; x.font="700 24px 'Baloo 2',sans-serif"; x.fillText('✦ FanDiary 應援日誌 ✦',450,1160);
   const url=cv.toDataURL('image/png');
+  window._mainCardUrl=url;
   document.getElementById('shareImg').src=url;
-  document.getElementById('shareDl').href=url;
 }
 
 /* ================= SNS 分享圖引擎 ================= */
 function rrp(c,px,py,w,h,r){ c.beginPath(); c.moveTo(px+r,py); c.arcTo(px+w,py,px+w,py+h,r); c.arcTo(px+w,py+h,px,py+h,r); c.arcTo(px,py+h,px,py,r); c.arcTo(px,py,px+w,py,r); c.closePath(); }
+async function dlDataUrl(dataUrl,fname){
+  try{
+    const blob=await (await fetch(dataUrl)).blob();
+    const u=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=u; a.download=fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),4000);
+    toast('已下載,到相簿或下載資料夾查看','⬇');
+  }catch(e){
+    try{ window.open(dataUrl,'_blank'); toast('長按圖片即可儲存','💡'); }
+    catch(e2){ toast('下載失敗,請用「分享」按鈕','⚠️'); }
+  }
+}
 function loadImg(src){ return new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; }); }
 function wrapText(x,txt,cx,cy,maxW,lh,maxLines){
   const chars=[...(txt||'')]; let line='',lines=[];
@@ -1387,7 +1411,7 @@ function openShareSheet(url,fname){
     <p class="sub" style="margin:4px 0;">9:16 直式,IG 限動 / Threads 完美尺寸。下載到相簿再貼限動,或直接系統分享。</p>
     <div style="text-align:center;"><img src="${url}" alt="分享圖預覽" style="width:60%; border:2.5px solid var(--ink); border-radius:14px; box-shadow:4px 4px 0 var(--ink);"></div>
     <div class="row" style="margin-top:12px;">
-      <a class="btn line" style="text-decoration:none;" href="${url}" download="${fname}">⬇ 下載</a>
+      <button class="btn line" onclick="dlDataUrl(window._shareUrl,'${fname}')">⬇ 下載</button>
       <button class="btn" onclick="shareImgFile('${fname}')">📤 分享</button>
     </div>`);
 }
@@ -1414,6 +1438,12 @@ async function shareCountdown(){
     :'日子會過去,演唱會一定會來 🌱';
   const cv=document.createElement('canvas'); cv.width=1080; cv.height=1920; const x=cv.getContext('2d');
   dotBg(x,1080,1920);
+  const bgSrc=photoSrc(nx.photo);
+  if(bgSrc){ const bim=await loadImg(bgSrc); if(bim){
+    const r=Math.max(1080/bim.width,1920/bim.height);
+    x.globalAlpha=1; x.drawImage(bim,(1080-bim.width*r)/2,(1920-bim.height*r)/2,bim.width*r,bim.height*r);
+    x.fillStyle='rgba(255,246,233,.84)'; x.fillRect(0,0,1080,1920);
+  } }
   x.textAlign='center';
   x.fillStyle=a.color; x.font="800 46px 'Baloo 2','Noto Sans TC',sans-serif";
   x.fillText(`💖 ${a.name} 💖`,540,235);
@@ -1466,20 +1496,27 @@ async function shareYearCard(){
     x.font="800 58px 'Baloo 2','Noto Sans TC',sans-serif"; x.fillText(t[0],px+218,py+102);
     x.font="700 30px 'Noto Sans TC',sans-serif"; x.fillText(t[1],px+218,py+162);
   });
-  box(90,960,900,560,0.008,'#fff');
+  box(90,960,900,600,0.008,'#fff');
   x.fillStyle='#221D2B'; x.font="800 40px 'Baloo 2','Noto Sans TC',sans-serif";
-  x.fillText('— 今年參戰清單 —',540,1035);
-  x.font="500 33px 'Noto Sans TC',sans-serif";
-  const list=mems.slice(0,6);
+  x.fillText('— 今年參戰清單 —',540,1030);
+  const best=[...mems].sort((p,q)=>(q.rating||0)-(p.rating||0))[0];
+  const MAXROW=10, list=mems.slice(0,MAXROW);
   if(list.length){
-    x.textAlign='left';
+    const dense=list.length>7;
+    const fs=dense?27:32, lh=dense?44:56, y0=dense?1082:1096;
+    x.textAlign='left'; x.font=`500 ${fs}px 'Noto Sans TC',sans-serif`;
     list.forEach((m,i)=>{
-      const t=m.title.length>16?m.title.slice(0,16)+'…':m.title;
-      x.fillText(`${m.date.slice(5)}  ${t}`,150,1102+i*64);
+      const star=best&&m.id===best.id&&(m.rating||0)>=5?' ⭐':'';
+      const maxCh=dense?21:18;
+      const t=[...m.title].length>maxCh?[...m.title].slice(0,maxCh).join('')+'…':m.title;
+      x.fillStyle='#221D2B';
+      x.fillText(`${m.date.slice(5).replace('-','/')}`,140,y0+i*lh);
+      x.fillText(`${t}${star}`,268,y0+i*lh);
     });
     x.textAlign='center';
-  } else x.fillText('今年還沒參戰,下半年見!',540,1200);
-  x.font='50px serif'; x.fillText(ctys.map(c=>FLAGS[c]||'').join(' ')||'🌱',540,1585);
+    if(mems.length>MAXROW){ x.font="500 26px 'Noto Sans TC',sans-serif"; x.fillText(`…還有 ${mems.length-MAXROW} 場裝不下,參戰太狂`,540,y0+MAXROW*lh); }
+  } else { x.font="500 33px 'Noto Sans TC',sans-serif"; x.fillText('今年還沒參戰,下半年見!',540,1200); }
+  x.font='46px serif'; x.fillText(ctys.map(c=>FLAGS[c]||'').join(' ')||'🌱',540,1640);
   x.fillStyle='#221D2B'; x.font="700 34px 'Baloo 2','Noto Sans TC',sans-serif";
   x.fillText(`#${yr}參戰回顧 #${(a.group||a.name).replace(/\s+/g,'')}`,540,1768);
   x.font="700 30px 'Baloo 2',sans-serif"; x.globalAlpha=.7;
@@ -1605,8 +1642,8 @@ if(window.visualViewport){
     sheetEl.style.maxHeight=Math.round(window.visualViewport.height*0.86)+'px';
   });
 }
-function showSheet(html){ sheetEl.innerHTML=html; sheetEl.classList.add('on'); veil.classList.add('on'); }
-function closeSheet(){ sheetEl.classList.remove('on'); veil.classList.remove('on'); if(typeof MEM_FROM!=='undefined') MEM_FROM=null; }
+function showSheet(html){ sheetEl.innerHTML=html; sheetEl.classList.add('on'); veil.classList.add('on'); document.body.style.overflow='hidden'; }
+function closeSheet(){ sheetEl.classList.remove('on'); veil.classList.remove('on'); document.body.style.overflow=''; if(typeof MEM_FROM!=='undefined') MEM_FROM=null; }
 const artistOpts=sel=>S.artists.map(a=>`<option value="${a.id}" ${a.id===(sel||S.activeArtistId)?'selected':''}>${esc(a.name)}</option>`).join('');
 const countryOpts=sel=>COUNTRIES.map(c=>`<option ${c===sel?'selected':''}>${c}</option>`).join('');
 async function readPhoto(input){
@@ -1664,11 +1701,13 @@ async function saveArtist(){
   const o={name:n,group:document.getElementById('aGroup').value.trim(),role,since:document.getElementById('aSince').value||'',color:pickColor};
   if(EDITING&&EDITING.t==='artist'){
     const a=artist(EDITING.id);
-    if(role==='main') S.artists.forEach(x=>{ if(x.id!==a.id) x.role='sub'; });
+    if(role==='main'&&S.artists.filter(x=>x.role==='main'&&x.id!==a.id).length>=2)
+      return toast('主擔最多 2 位,請先把其中一位改為副擔','⚠️');
     Object.assign(a,o);
     EDITING=null; save(); applyTheme(); renderHome(); openArtistSheet(); toast('已儲存變更'); return;
   }
-  if(role==='main') S.artists.forEach(x=>x.role='sub');
+  if(role==='main'&&S.artists.filter(x=>x.role==='main').length>=2)
+    return toast('主擔最多 2 位,請先把其中一位改為副擔','⚠️');
   const a={id:uid(),...o};
   S.artists.push(a); S.activeArtistId=a.id;
   let imported=0;
@@ -1725,6 +1764,7 @@ function openEventSheet(id){
       <div><label class="f">城市</label><input id="eCity" value="${e?esc(e.city||''):''}" placeholder="台北"></div>
       <div><label class="f">國家</label><select id="eCountry">${countryOpts(e?e.country:null)}</select></div>
     </div>
+    <label class="f">主視覺圖(選填,分享倒數卡當背景)${e&&photoSrc(e.photo)?'(已有圖,不選=保留)':''}</label><input id="ePhoto" type="file" accept="image/*">
     <label class="f">場次歸屬</label><select id="eUnit"><option value="" ${e&&!e.unit?'selected':''}>—</option><option ${e&&e.unit==='團體'?'selected':''}>團體</option><option ${e&&e.unit==='SOLO'?'selected':''}>SOLO</option></select>
     <label class="f">備註(售票網/連結)</label><input id="eNote" value="${e?esc(e.note||''):''}" placeholder="選填">
     <div style="margin-top:16px;" class="row">
@@ -1732,16 +1772,18 @@ function openEventSheet(id){
       <button class="btn" onclick="saveEvent()">${e?'儲存變更':'存入日曆'}</button>
     </div>`);
 }
-function saveEvent(){
+async function saveEvent(){
   const n=document.getElementById('eName').value.trim(); if(!n)return toast('名稱必填','⚠️');
+  const newPhoto=await readPhoto(document.getElementById('ePhoto'));
+  const pref=newPhoto?await savePhoto(newPhoto):null;
   const o={name:n,type:document.getElementById('eType').value,artistId:document.getElementById('eArtist').value,
     date:document.getElementById('eDate').value,time:document.getElementById('eTime').value,
     city:document.getElementById('eCity').value.trim(),country:document.getElementById('eCountry').value,
     venue:document.getElementById('eVenue').value.trim(),
     unit:document.getElementById('eUnit').value,
     note:document.getElementById('eNote').value.trim()};
-  if(EDITING&&EDITING.t==='event'){ Object.assign(S.events.find(x=>x.id===EDITING.id),o); }
-  else S.events.push({id:uid(),...o});
+  if(EDITING&&EDITING.t==='event'){ const ev=S.events.find(x=>x.id===EDITING.id); Object.assign(ev,o); if(pref){ dropPhoto(ev.photo); ev.photo=pref; } }
+  else S.events.push({id:uid(),...o,photo:pref});
   EDITING=null; save(); closeSheet(); toast('已儲存'); calSel=o.date;
   const dt=new Date(o.date); calY=dt.getFullYear(); calM=dt.getMonth();
   go('cal');
@@ -1979,6 +2021,7 @@ function endIntro(){ S.ui=S.ui||{}; S.ui.seenIntro=1; save(); closeSheet(); }
 /* ================= boot ================= */
 function tour(i){
   const steps=[
+    {icon:'🔒',t:'你的資料只屬於你',d:'所有紀錄、照片、小抄都<b>只存在你這台裝置</b>,不會上傳雲端,開發者也完全看不到。清瀏覽器資料前記得先到「設定」備份!'},
     {icon:'💖',t:'先選好你的自擔',d:'首頁上方點自擔圓片切換,整個 App 會換成他的應援色。畫面上的資料是示範用,可以隨時刪改或直接覆蓋。'},
     {icon:'📅',t:'把行程放進日曆',d:'新增自擔時填團名可自動帶入已公佈行程;或用日曆的「📋 貼上」把官方公告一鍵變行程。「開賣」一進日曆,搶票作戰室的倒數就自動啟動。'},
     {icon:'📖',t:'參戰完寫進回憶',d:'演出標「🎫 中票」會同步戰績和門票支出;演出結束後按「📖 寫回憶」,補上照片心得,再生成票根分享到 IG 限動!'}
