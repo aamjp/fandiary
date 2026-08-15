@@ -586,6 +586,7 @@ body.calm .stat em,body.calm .hero-count.soon{animation:none;}
     <canvas id="shareCanvas" width="900" height="1200" style="display:none;"></canvas>
     <img id="shareImg" alt="戰績分享卡預覽">
     <div style="margin-top:12px;"><button id="shareDl" class="btn wide" onclick="dlDataUrl(window._mainCardUrl,'fandiary-share.png')">📤 分享 / 存到相簿</button></div>
+    <div style="margin-top:8px;"><button class="btn line wide" onclick="saveHint(window._mainCardUrl,'fandiary-share.png')">🖼 長按儲存(iPhone 備用)</button></div>
   </div>
   <div class="card tilt-r">
     <div class="tape t2"></div>
@@ -640,6 +641,8 @@ body.calm .stat em,body.calm .hero-count.soon{animation:none;}
       <button class="btn line" onclick="openRestorePaste()">📥 還原</button>
     </div>
     <div style="margin-top:10px;"><button class="btn sm wide" onclick="exportICS()">📆 匯出未來行程到手機行事曆(.ics)</button></div>
+    <div style="margin-top:10px;"><button class="btn sm line wide" onclick="forceUpdate()">🔄 強制更新到最新版(資料不會刪除)</button></div>
+    <p class="sub" style="font-size:11px; margin:6px 0 0; text-align:center;">目前版本 <b id="appVerText"></b>｜按了會清除程式快取並重新載入,你的紀錄與照片都會保留</p>
     <div style="margin-top:10px;"><button class="btn sm wide" id="pwaInstallBtn" onclick="pwaInstall()">📲 安裝到主畫面</button></div>
     <div style="margin-top:10px;"><button class="btn sm wide" onclick="clearDemoData()">🧹 一鍵清除示範資料(保留自己的紀錄)</button></div>
     <div style="margin-top:10px;"><button class="btn sm line wide" onclick="factoryReset()">🔄 恢復出廠預設(清除所有資料)</button></div>
@@ -678,7 +681,19 @@ body.calm .stat em,body.calm .hero-count.soon{animation:none;}
 </nav>
 
 <script>
+/* ===== 全域錯誤提示:手機上也看得到錯誤內容,方便回報 ===== */
+window.onerror=function(msg,src,line,col){
+  try{
+    let b=document.getElementById('errBar');
+    if(!b){ b=document.createElement('div'); b.id='errBar';
+      b.style.cssText='position:fixed; left:0; right:0; bottom:0; z-index:99999; background:#FF5C8A; color:#fff; font-size:11.5px; font-weight:700; padding:8px 12px; line-height:1.5; max-height:38vh; overflow:auto;';
+      b.onclick=()=>b.remove(); document.body.appendChild(b); }
+    b.textContent='⚠️ '+msg+'  (行 '+line+':'+col+')  ·  點一下關閉';
+  }catch(e){}
+  return false;
+};
 /* ================= state ================= */
+const APP_VER='3.7';
 const LS='fandiary_v2';
 const TYPE_COLOR={'演出':'var(--acc)','抽選':'var(--sky)','入金':'var(--sun)','開賣':'var(--tan)','其他':'var(--mint)'};
 const TYPE_PILL={'演出':'acc','抽選':'sky','入金':'sun','開賣':'tan','其他':'mint'};
@@ -892,6 +907,11 @@ function migrate(){
     delete m.photo; });
   S.expenses.forEach(e=>{ if(!e.cur)e.cur='TWD'; });
   if(!S.ui)S.ui={};
+  /* 已被舊版本移除、但仍有關聯資料的 artistId → 自動收進系統『未分類』 */
+  const validIds=new Set(S.artists.map(a=>a.id));
+  ['events','memories','cards','expenses','perks','sets','tickets'].forEach(k=>{
+    S[k].forEach(v=>{ if(v.artistId&&!validIds.has(v.artistId)) v.artistId=UNCATEGORIZED_ID; });
+  });
   tagLegacyDemo();
 }
 /* 舊資料補打示範標記(只跑一次):讓更新前就在用的人也能一鍵清除示範資料 */
@@ -953,7 +973,7 @@ async function clearDemoData(){
 }
 function load(){ try{S=JSON.parse(localStorage.getItem(LS))}catch(e){} if(!S||!S.artists) S=seed(); migrate(); save(); }
 function save(){ try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){ toast('儲存空間已滿','⚠️'); } }
-const artist=id=>S.artists.find(a=>a.id===id);
+const artist=id=>id===UNCATEGORIZED_ID?UNCATEGORIZED_ARTIST:S.artists.find(a=>a.id===id);
 const active=()=>artist(S.activeArtistId)||S.artists[0];
 const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -1830,14 +1850,15 @@ function renderMoney(){
     const sum=trips[name].reduce((s2,e)=>s2+toBase(e),0), bud=tb[name]||0;
     const pct=bud?Math.min(100,Math.round(sum/bud*100)):0;
     const key=encodeURIComponent(name);
-    return `<div style="margin:10px 0; cursor:pointer;" onclick="setTripBudget(decodeURIComponent('${key}'))">
-      <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; gap:8px;">
+    return `<div style="margin:10px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:700; gap:8px;">
         <span>✈️ ${esc(name)} <span class="sub" style="font-weight:500;">(${trips[name].length} 筆)</span></span>
         <span>${CUR_SIGN[baseCur()]}${sum.toLocaleString()}${bud?` / ${bud.toLocaleString()}`:''}</span>
       </div>
       ${bud?`<div class="bar-track" style="margin-top:4px;"><div class="bar-fill" style="width:${pct}%; background:${pct>=100?'var(--rose)':'var(--mint)'}"></div></div>
-      <div class="sub" style="font-size:11px; text-align:right;">${pct}%${pct>=100?' 預算爆了,但快樂無價 🥲':''}</div>`
-      :`<div class="sub" style="font-size:11px;">點一下設定這趟的預算 →</div>`}
+      <div class="sub" style="font-size:11px; text-align:right;">${pct}%${pct>=100?' 預算爆了,但快樂無價 🥲':` · ${sum<=bud?'尚餘 '+CUR_SIGN[baseCur()]+(bud-sum).toLocaleString():'超出 '+CUR_SIGN[baseCur()]+(sum-bud).toLocaleString()}`}</div>`
+      :`<div class="sub" style="font-size:11px;">尚未設定預算</div>`}
+      <div style="margin-top:6px; text-align:right;"><button class="btn sm line" onclick="setTripBudget(decodeURIComponent('${key}'))">${bud?'✏️ 編輯預算':'＋ 設定預算'}</button></div>
     </div>`;
   }).join(''):'<div class="empty" style="padding:8px 0;">記支出時填「遠征」欄位,同一趟的機票+住宿+票+周邊就會打包在這裡</div>';
 }
@@ -1852,7 +1873,12 @@ function setTripBudget(name){
       <button class="btn" onclick="(function(){const v=+document.getElementById('tripBud').value||0; const tb2=S.ui.tripBudgets; if(v)tb2[decodeURIComponent('${encodeURIComponent(name)}')]=v; else delete tb2[decodeURIComponent('${encodeURIComponent(name)}')]; save(); closeSheet(); renderMoney(); toast('預算已更新','✈️');})()">儲存</button>
     </div>`);
 }
-function delExp(id){ S.expenses=S.expenses.filter(e=>e.id!==id); save(); renderMoney(); }
+async function delExp(id){
+  const e=S.expenses.find(v=>v.id===id); if(!e)return;
+  const detail=[e.cat,`${CUR_SIGN[e.cur||'TWD']} ${(+e.amount||0).toLocaleString()}`,e.trip?`✈️ ${e.trip}`:'',e.note||''].filter(Boolean).join(' · ');
+  if(!(await uiConfirm(`刪除這筆支出?<br><span style="font-size:12px;font-weight:500;">${esc(detail)}<br>刪除後遠征合計與預算進度會一起更新。</span>`,'刪除','保留')))return;
+  S.expenses=S.expenses.filter(v=>v.id!==id); save(); renderMoney(); toast('支出已刪除','🗑');
+}
 
 /* ================= share card ================= */
 let shareScope='';
@@ -2068,35 +2094,53 @@ function renderShare(){
   x.font="500 24px 'Noto Sans TC',sans-serif"; x.fillText(last?`${last.date} · ${last.city} ${last.country}`:'',450,915);
   x.fillStyle='#221D2B'; x.font="700 24px 'Baloo 2',sans-serif"; x.fillText('✦ FanDiary 應援日誌 ✦',450,1120);
   const url=cv.toDataURL('image/png');
-  window._mainCardUrl=url;
+  window._mainCardUrl=url; prepShareFile(window._mainCardUrl,'fandiary-share.png');
   document.getElementById('shareImg').src=url;
 }
 
 /* ================= SNS 分享圖引擎 ================= */
 function rrp(c,px,py,w,h,r){ r=Math.min(r,w/2,h/2); /* 鉗制半徑:canvas arcTo 不會自動收斂,過大會畫出巨型弧形蓋掉版面 */
   c.beginPath(); c.moveTo(px+r,py); c.arcTo(px+w,py,px+w,py+h,r); c.arcTo(px+w,py+h,px,py+h,r); c.arcTo(px,py+h,px,py,r); c.arcTo(px,py,px+w,py,r); c.closePath(); }
-async function dlDataUrl(dataUrl,fname){
-  /* 優先走系統分享面板 → 手機上點「儲存影像」直接存進相簿(iOS/Android 皆可) */
-  try{
-    const blob=await (await fetch(dataUrl)).blob();
-    const file=new File([blob],fname,{type:blob.type||'image/png'});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){
-      try{
-        await navigator.share({files:[file]});
-        toast('在面板選「儲存影像」即可存進相簿','💾');
-        return;
-      }catch(err){ if(err&&err.name==='AbortError') return; /* 使用者取消 */ }
-    }
-    /* 桌面瀏覽器 / 不支援分享 → 傳統下載 */
-    const u=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=u; a.download=fname;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(u),4000);
-    toast('此裝置不支援直接存相簿,已下載到「下載」資料夾','⬇');
-  }catch(e){
-    try{ window.open(dataUrl,'_blank'); toast('長按圖片即可儲存到相簿','💡'); }
-    catch(e2){ toast('儲存失敗,請用「分享」按鈕','⚠️'); }
+/* ===== 分享/存相簿:iOS 手勢安全版 =====
+   iOS 規定 navigator.share() 必須在點擊的同步流程中呼叫,
+   所以檔案要「點擊前」就備好;失敗時退回長按儲存(iOS 唯一穩定的存相簿方式) */
+let SHARE_FILE=null, SHARE_FILE_URL=null;
+function prepShareFile(url,fname){
+  SHARE_FILE=null; SHARE_FILE_URL=url;
+  (async()=>{ try{
+    const b=await (await fetch(url)).blob();
+    if(SHARE_FILE_URL===url) SHARE_FILE=new File([b],fname||'fandiary.png',{type:'image/png'});
+  }catch(e){} })();
+}
+function dlDataUrl(dataUrl,fname){
+  /* 已備好且是同一張圖 → 同步呼叫分享(保住 user gesture) */
+  if(SHARE_FILE&&SHARE_FILE_URL===dataUrl&&navigator.canShare&&navigator.canShare({files:[SHARE_FILE]})){
+    navigator.share({files:[SHARE_FILE]})
+      .then(()=>toast('在面板選「儲存影像」即可存進相簿','💾'))
+      .catch(err=>{ if(!err||err.name!=='AbortError') saveHint(dataUrl,fname); });
+    return;
   }
+  /* 桌面瀏覽器 → 傳統下載;iOS/不支援 → 長按儲存 */
+  const iOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(iOS) return saveHint(dataUrl,fname);
+  try{
+    const a=document.createElement('a'); a.href=dataUrl; a.download=fname||'fandiary.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('已下載到「下載」資料夾','⬇');
+  }catch(e){ saveHint(dataUrl,fname); }
+}
+/* 全螢幕預覽:長按圖片 → 加入照片(iOS 最可靠) */
+function saveHint(url,fname){
+  const old=document.getElementById('saveHintVeil'); if(old)old.remove();
+  const v=document.createElement('div');
+  v.id='saveHintVeil';
+  v.style.cssText='position:fixed; inset:0; z-index:9999; background:rgba(34,29,43,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:20px; overflow:auto;';
+  v.innerHTML='<div style="color:#fff; font-weight:800; font-size:15px; text-align:center; line-height:1.6;">👇 長按下面的圖片<br>選「加入照片」或「儲存到照片」</div>'
+    +'<img src="'+url+'" alt="分享圖" style="max-width:82%; max-height:66vh; border-radius:14px; border:3px solid #fff;">'
+    +'<div style="color:#fff; opacity:.75; font-size:12px; text-align:center;">存好後就能發限動了 ✦</div>'
+    +'<button style="margin-top:4px; padding:10px 26px; border-radius:99px; border:2.5px solid #221D2B; background:#FFC646; font-weight:800; font-size:14px; cursor:pointer;">關閉</button>';
+  v.querySelector('button').onclick=()=>v.remove();
+  document.body.appendChild(v);
 }
 function loadImg(src){ return new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; }); }
 /* 只算行、不畫:給版面預先計算高度用(與 wrapText 同一套斷行規則) */
@@ -2237,6 +2281,53 @@ async function shareMemCard(id){
   x.font="700 30px 'Baloo 2',sans-serif"; x.globalAlpha=.7;
   x.fillText('✦ FanDiary 應援日誌 ✦',540,1836); x.globalAlpha=1;
   openShareSheet(cv.toDataURL('image/png'),'fandiary-memory.png');
+}
+async function shareCardImg(id){
+  const c=S.cards.find(v=>v.id===id); if(!c)return;
+  const a=artist(c.artistId)||active();
+  const cv=document.createElement('canvas'); cv.width=1080; cv.height=1920; const x=cv.getContext('2d');
+  dotBg(x,1080,1920);
+  const cw=680, ch=Math.round(cw/5.5*8.5), cx0=(1080-cw)/2, cy0=290;
+  x.save(); x.translate(cx0+cw/2,cy0+ch/2); x.rotate(0.014);
+  x.fillStyle='#221D2B'; rrp(x,-cw/2+10,-ch/2+10,cw,ch,26); x.fill();
+  x.fillStyle=a.color; rrp(x,-cw/2,-ch/2,cw,ch,26); x.fill();
+  const cps=photoSrc(c.photo);
+  if(cps){ const im=await loadImg(cps); if(im){ x.save(); rrp(x,-cw/2,-ch/2,cw,ch,26); x.clip();
+      const r=Math.max(cw/im.width,ch/im.height);
+      x.drawImage(im,-im.width*r/2,-im.height*r/2,im.width*r,im.height*r); x.restore(); } }
+  else{ x.font='240px serif'; x.textAlign='center'; x.fillStyle='#fff'; x.fillText('💿',0,85); }
+  x.lineWidth=8; x.strokeStyle='#221D2B'; rrp(x,-cw/2,-ch/2,cw,ch,26); x.stroke();
+  x.restore();
+  x.textAlign='center'; x.fillStyle='#221D2B';
+  x.font="800 54px 'Baloo 2','Noto Sans TC',sans-serif";
+  wrapText(x,c.title,540,cy0+ch+108,880,64,2);
+  x.font="700 38px 'Noto Sans TC',sans-serif"; x.fillStyle=a.color;
+  x.fillText(`${c.category||''} · ${a.name}`,540,cy0+ch+248);
+  if(c.status&&c.status!=='keep'){
+    x.fillStyle='#FF8A5C'; rrp(x,320,cy0+ch+288,440,76,999); x.fill();
+    x.lineWidth=5; x.strokeStyle='#221D2B'; rrp(x,320,cy0+ch+288,440,76,999); x.stroke();
+    x.fillStyle='#fff'; x.font="800 40px 'Noto Sans TC',sans-serif";
+    x.fillText(c.status==='give'?'🔁 想換走,私我':'🙏 徵求中,求讓',540,cy0+ch+341);
+  }
+  x.fillStyle='#221D2B'; x.font="700 34px 'Baloo 2','Noto Sans TC',sans-serif";
+  x.fillText(`#小卡交換 #${(a.group||a.name).replace(/\s+/g,'')}`,540,1768);
+  x.font="700 30px 'Baloo 2',sans-serif"; x.globalAlpha=.7;
+  x.fillText('✦ FanDiary 應援日誌 ✦',540,1836); x.globalAlpha=1;
+  openShareSheet(cv.toDataURL('image/png'),'fandiary-card.png');
+}
+function openShareSheet(url,fname){
+  window._shareUrl=url;
+  prepShareFile(url,fname); /* 先備好檔案,點擊時才能同步分享(iOS 關鍵) */
+  showSheet(`
+    <h2 class="disp" style="margin:0 0 4px;">📤 分享到 SNS</h2>
+    <p class="sub" style="margin:4px 0;">9:16 直式,IG 限動 / Threads 完美尺寸。手機會開系統面板:選「儲存影像」存進相簿,或直接傳給朋友。</p>
+    <div style="text-align:center;"><img src="${url}" alt="分享圖預覽" style="width:60%; border:2.5px solid var(--ink); border-radius:14px; box-shadow:4px 4px 0 var(--ink);"></div>
+    <div style="margin-top:12px;">
+      <button class="btn wide" onclick="dlDataUrl(window._shareUrl,'${fname}')">📤 分享 / 存到相簿</button>
+    </div>
+    <div style="margin-top:8px;">
+      <button class="btn line wide" onclick="saveHint(window._shareUrl,'${fname}')">🖼 長按儲存(iPhone 備用)</button>
+    </div>`);
 }
 async function shareCountdown(){
   const nx=nextStage().ev;
@@ -2485,32 +2576,27 @@ function openPerkList(type){
 
 /* ================= 行事曆匯出(.ics):吃到手機原生行事曆通知 ================= */
 function exportICS(){
-  const evs=S.events.filter(e=>e.date>=todayStr()).sort((a,b)=>a.date.localeCompare(b.date));
-  if(!evs.length)return toast('沒有未來行程可匯出','📆');
-  const E=t=>String(t||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
-  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FanDiary//ZH','CALSCALE:GREGORIAN','X-WR-CALNAME:FanDiary 應援行程'];
+  const evs=S.events.filter(e=>e.date>=todayStr()).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  if(!evs.length)return toast('目前沒有未來行程可匯出','📆');
+  const escICS=v=>String(v||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+  const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  let out='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//FanDiary//ZH-TW\r\nCALSCALE:GREGORIAN\r\n';
   evs.forEach(e=>{
-    const d=e.date.replace(/-/g,'');
-    L.push('BEGIN:VEVENT','UID:fd-'+e.id+'@fandiary','DTSTAMP:'+d+'T000000Z');
-    if(e.time){ L.push('DTSTART:'+d+'T'+e.time.replace(':','')+'00'); }
-    else L.push('DTSTART;VALUE=DATE:'+d);
-    L.push('SUMMARY:'+E(`【${e.type}】${e.name}`));
-    const desc=[e.note,artist(e.artistId)?.name].filter(Boolean).join(' / ');
-    if(desc)L.push('DESCRIPTION:'+E(desc));
-    const loc=[e.venue,e.city,e.country].filter(Boolean).join(', ');
-    if(loc)L.push('LOCATION:'+E(loc));
-    L.push('END:VEVENT');
+    const ds=e.date.replace(/-/g,''); const tm=(e.time||'').replace(':','');
+    const dt=tm?`DTSTART:${ds}T${tm}00`:`DTSTART;VALUE=DATE:${ds}`;
+    out+=`BEGIN:VEVENT\r\nUID:${e.id}@fandiary\r\nDTSTAMP:${stamp()}\r\n${dt}\r\nSUMMARY:${escICS(e.name)}\r\nLOCATION:${escICS([e.venue,e.city,e.country].filter(Boolean).join(' · '))}\r\nDESCRIPTION:${escICS(e.note||'')}\r\nEND:VEVENT\r\n`;
   });
-  L.push('END:VCALENDAR');
-  const blob=new Blob([L.join('\r\n')],{type:'text/calendar;charset=utf-8'});
-  const u=URL.createObjectURL(blob); const a=document.createElement('a');
+  out+='END:VCALENDAR\r\n';
+  const file=new File([out],'fandiary行程.ics',{type:'text/calendar'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:'FanDiary 行程'}).catch(err=>{ if(!err||err.name!=='AbortError') toast('匯出失敗,請再試一次','⚠️'); });
+    return;
+  }
+  const u=URL.createObjectURL(file); const a=document.createElement('a');
   a.href=u; a.download='fandiary行程.ics'; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(u),4000);
-  toast(`已匯出 ${evs.length} 筆,開啟 .ics 檔加入行事曆即可吃到系統通知`,'📆');
+  setTimeout(()=>URL.revokeObjectURL(u),2000);
+  toast('已匯出行程檔','📆');
 }
-
-/* ================= 約飯空檔分享(給現生朋友) ================= */
-let MEAL_DAYS=30, MEAL_FULL=false;
 function openMealShare(){
   MEAL_DAYS=30; MEAL_FULL=false;
   showSheet(`
@@ -2560,6 +2646,14 @@ function copyMeal(btn){
   else fb();
 }
 
+/* 強制更新:清程式快取+註銷 SW 後重載(localStorage/IndexedDB 的紀錄不動) */
+async function forceUpdate(){
+  if(!(await uiConfirm('清除程式快取並重新載入最新版?<br><span style="font-size:12px; font-weight:500;">你的參戰紀錄、照片、備份都會保留。</span>','更新','取消')))return;
+  try{ if(window.caches){ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); } }catch(e){}
+  try{ if(navigator.serviceWorker){ const rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r=>r.unregister())); } }catch(e){}
+  toast('已清除快取,正在重新載入…','🔄');
+  setTimeout(()=>location.reload(true),600);
+}
 /* ================= 多語言(介面骨架) ================= */
 const I18N={
  ja:{'nav.home':'ホーム','nav.cal':'予定','nav.mem':'思い出','nav.war':'チケット','nav.pc':'トレカ',
@@ -2601,7 +2695,7 @@ window.addEventListener('appinstalled',()=>{
   const b=document.getElementById('pwaInstallBtn'); if(b)b.textContent='✅ 已安裝到主畫面';
 });
 function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true; }
-function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }
 async function pwaInstall(){
   if(isStandalone()) return toast('已經是主畫面 App 了!','📲');
   if(PWA_PROMPT){ /* Android/Chrome:直接跳原生安裝視窗 */
@@ -2641,6 +2735,7 @@ function renderSettings(){
   const ui=S.ui||{};
   document.getElementById('setHome').innerHTML=`<option value="" ${!ui.homeCountry?'selected':''}>未設定</option>`+COUNTRIES.map(c=>`<option ${ui.homeCountry===c?'selected':''}>${c}</option>`).join('');
   document.getElementById('setCur').innerHTML=Object.keys(CUR_SIGN).map(c=>`<option value="${c}" ${baseCur()===c?'selected':''}>${CUR_SIGN[c]} ${c}</option>`).join('');
+  const ver=document.getElementById('appVerText'); if(ver)ver.textContent=APP_VER;
   const th=(S.ui&&S.ui.theme)||'auto';
   document.getElementById('setTheme').innerHTML=[['auto','🌓 跟隨系統'],['light','☀️ 淺色'],['dark','🌙 深色']].map(o=>`<option value="${o[0]}" ${th===o[0]?'selected':''}>${o[1]}</option>`).join('');
 }
@@ -2762,9 +2857,15 @@ if(window.visualViewport){
 function showSheet(html){ sheetEl.innerHTML=html; sheetEl.classList.add('on'); veil.classList.add('on'); document.body.style.overflow='hidden'; }
 function closeSheet(){ sheetEl.classList.remove('on'); veil.classList.remove('on'); document.body.style.overflow=''; if(typeof MEM_FROM!=='undefined') MEM_FROM=null; }
 const ROLES={main:{ic:'⭐',label:'主擔'},sub:{ic:'💛',label:'副擔'},crush:{ic:'👀',label:'浮氣'},ex:{ic:'📦',label:'舊愛'}};
+const UNCATEGORIZED_ID='__uncategorized__';
+const UNCATEGORIZED_ARTIST={id:UNCATEGORIZED_ID,name:'未分類',group:'',color:'#BDBDBD',role:'sub',system:true};
 const roleIc=r=>(ROLES[r]||ROLES.sub).ic;
 const roleLabel=r=>(ROLES[r]||ROLES.sub).label;
-const artistOpts=sel=>S.artists.map(a=>`<option value="${a.id}" ${a.id===(sel||S.activeArtistId)?'selected':''}>${roleIc(a.role)} ${esc(a.name)}</option>`).join('');
+const artistOpts=sel=>{
+  const chosen=sel||S.activeArtistId;
+  return S.artists.map(a=>`<option value="${a.id}" ${a.id===chosen?'selected':''}>${roleIc(a.role)} ${esc(a.name)}</option>`).join('')+
+    `<option value="${UNCATEGORIZED_ID}" ${chosen===UNCATEGORIZED_ID?'selected':''}>🗂️ 未分類</option>`;
+};
 const countryOpts=sel=>COUNTRIES.map(c=>`<option ${c===sel?'selected':''}>${c}</option>`).join('');
 function compressFile(f){
   return new Promise(async res=>{
@@ -2825,7 +2926,11 @@ function openArtistSheet(){
           <div class="sub" style="font-size:12px;">${esc(a.group||'')}${a.since?' · 入坑 '+a.since:''}</div></div>
         <span style="opacity:.45;">✏️ ›</span>
         <button class="btn sm line" onclick="event.stopPropagation();delArtist('${a.id}')">🗑</button>
-      </div>`).join('')}</div>
+      </div>`).join('')}
+      <div class="mate" style="opacity:.82;">
+        <div class="av" style="background:#BDBDBD">🗂</div>
+        <div style="flex:1;"><b>🗂️ 未分類</b><div class="sub" style="font-size:12px;">系統分類 · 移除自擔後的紀錄會安全收在這裡</div></div>
+      </div></div>
     <div style="margin-top:14px;"><button class="btn wide" onclick="openArtistForm()">➕ 新增自擔</button></div>`);
 }
 function openArtistForm(editId){
@@ -2879,18 +2984,33 @@ async function saveArtist(){
 }
 async function delArtist(id){
   if(S.artists.length<=1)return toast('至少保留一位自擔','⚠️');
-  const a=artist(id);
-  const ch=await uiChoice(`移除「${a?esc(a.name):''}」?`,[
-    {label:'🗑 連同他的行程一併刪除',value:'wipe'},
-    {label:'👤 只移除人,保留行程與回憶',value:'keep',primary:true},
+  const a=artist(id); if(!a)return;
+  const ch=await uiChoice(`要怎麼處理「${esc(a.name)}」?<br><span style="font-size:12.5px;font-weight:500;">改列舊愛會保留所有紀錄；真正移除也不會刪資料，相關紀錄會移到「未分類」。</span>`,[
+    {label:'📦 改列為舊愛',value:'ex',primary:true},
+    {label:'🗂️ 確定移除・紀錄轉未分類',value:'remove'},
     {label:'取消',value:null}
   ]);
   if(!ch)return;
+  if(ch==='ex'){
+    a.role='ex';
+    if(S.activeArtistId===id){
+      const next=S.artists.find(x=>x.id!==id&&x.role!=='ex')||S.artists.find(x=>x.id!==id);
+      if(next)S.activeArtistId=next.id;
+    }
+    if(!S.artists.some(x=>x.role==='main')){
+      const next=S.artists.find(x=>x.id!==id&&x.role!=='ex'); if(next)next.role='main';
+    }
+    save(); applyTheme(); renderHome(); openArtistSheet(); toast(`「${a.name}」已改列為舊愛`,'📦'); return;
+  }
+  const linked=['events','memories','cards','expenses','perks','sets','tickets'];
+  let moved=0;
+  linked.forEach(k=>S[k].forEach(v=>{ if(v.artistId===id){ v.artistId=UNCATEGORIZED_ID; moved++; } }));
   S.artists=S.artists.filter(x=>x.id!==id);
-  if(ch==='wipe') S.events=S.events.filter(e=>e.artistId!==id);
   if(S.activeArtistId===id)S.activeArtistId=S.artists[0].id;
-  if(S.artists.length&&!S.artists.some(x=>x.role==='main'))S.artists[0].role='main';
-  save(); applyTheme(); openArtistSheet(); toast('已移除');
+  if(S.artists.length&&!S.artists.some(x=>x.role==='main')){
+    const next=S.artists.find(x=>x.role!=='ex')||S.artists[0]; next.role='main';
+  }
+  save(); applyTheme(); renderHome(); openArtistSheet(); toast(`已移除，${moved} 筆紀錄轉到未分類`,'🗂️');
 }
 
 /* events */
@@ -3276,8 +3396,8 @@ function tour(i){
 function endTour(){ S.ui=S.ui||{}; S.ui.seenTour=1; save(); closeSheet(); toast('隨時可從 ⚙️ 設定重看導覽','🔰'); }
 
 load(); applyTheme(); applyLang(); go('home'); initPhotoStore();
-if(!(S.ui&&S.ui.seenTour)){ S.ui=S.ui||{}; S.ui.seenTour=1; save(); setTimeout(()=>tour(0),400); }
-if(!S.ui.seenIntro) setTimeout(()=>showIntro(1),400);
+if(!(S.ui&&S.ui.seenTour)){ S.ui=S.ui||{}; S.ui.seenTour=1; S.ui.seenIntro=1; save(); setTimeout(()=>tour(0),400); }
+else if(!S.ui.seenIntro){ S.ui.seenIntro=1; save(); }
 </script>
 </body>
 </html>
